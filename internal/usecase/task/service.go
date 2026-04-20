@@ -10,14 +10,25 @@ import (
 )
 
 type Service struct {
-	repo Repository
-	now  func() time.Time
+	taskRepo                TaskRepository
+	taskRecurrenceRepo      TaskRecurrenceRepository
+	taskRecurrenceDatesRepo TaskRecurrenceDateRepository
+	taskOccurrenceRepo      TaskOccurrenceRepository
+	now                     func() time.Time
 }
 
-func NewService(repo Repository) *Service {
+func NewService(
+	taskRepo TaskRepository,
+	taskRecurrenceRepo TaskRecurrenceRepository,
+	taskRecurrenceDatesRepo TaskRecurrenceDateRepository,
+	taskOccurrenceRepo TaskOccurrenceRepository,
+) *Service {
 	return &Service{
-		repo: repo,
-		now:  func() time.Time { return time.Now().UTC() },
+		taskRepo:                taskRepo,
+		taskRecurrenceRepo:      taskRecurrenceRepo,
+		taskRecurrenceDatesRepo: taskRecurrenceDatesRepo,
+		taskOccurrenceRepo:      taskOccurrenceRepo,
+		now:                     func() time.Time { return time.Now().UTC() },
 	}
 }
 
