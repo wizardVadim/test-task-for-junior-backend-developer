@@ -31,13 +31,18 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
+		Recurrence:  mapRecurrenceInput(req.Recurrence),
 	})
 	if err != nil {
 		writeUsecaseError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, newTaskDTO(created))
+	writeJSON(w, http.StatusCreated, newTaskDTO(
+		created.Task,
+		created.Recurrence,
+		created.RecurrenceDates,
+	))
 }
 
 func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +52,17 @@ func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.usecase.GetByID(r.Context(), id)
+	result, err := h.usecase.GetByID(r.Context(), id)
 	if err != nil {
 		writeUsecaseError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, newTaskDTO(task))
+	writeJSON(w, http.StatusOK, newTaskDTO(
+		result.Task,
+		result.Recurrence,
+		result.RecurrenceDates,
+	))
 }
 
 func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -73,13 +82,18 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
+		Recurrence:  mapRecurrenceInput(req.Recurrence),
 	})
 	if err != nil {
 		writeUsecaseError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, newTaskDTO(updated))
+	writeJSON(w, http.StatusOK, newTaskDTO(
+		updated.Task,
+		updated.Recurrence,
+		updated.RecurrenceDates,
+	))
 }
 
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +120,7 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	response := make([]taskDTO, 0, len(tasks))
 	for i := range tasks {
-		response = append(response, newTaskDTO(&tasks[i]))
+		response = append(response, newTaskDTO(&tasks[i], nil, nil))
 	}
 
 	writeJSON(w, http.StatusOK, response)
@@ -163,4 +177,26 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.WriteHeader(status)
 
 	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func mapRecurrenceInput(dto *taskRecurrenceDTO) *taskusecase.RecurrenceInput {
+	if dto == nil {
+		return nil
+	}
+
+	dates := make([]taskusecase.RecurrenceDateInput, 0, len(dto.Dates))
+	for _, d := range dto.Dates {
+		dates = append(dates, taskusecase.RecurrenceDateInput{
+			RunDate: d.RunDate,
+		})
+	}
+
+	return &taskusecase.RecurrenceInput{
+		Type:       dto.Type,
+		StartDate:  dto.StartDate,
+		EveryNDays: dto.EveryNDays,
+		DayOfMonth: dto.DayOfMonth,
+		IsActive:   dto.IsActive,
+		Dates:      dates,
+	}
 }

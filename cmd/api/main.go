@@ -35,8 +35,15 @@ func main() {
 	}
 	defer pool.Close()
 
-	taskRepo := postgresrepo.New(pool)
-	taskUsecase := task.NewService(taskRepo)
+	taskRepo := postgresrepo.NewTaskRepository(pool)
+	taskRecurrenceRepo := postgresrepo.NewTaskRecurrenceRepository(pool)
+	taskRecurrenceDatesRepo := postgresrepo.NewTaskRecurrenceDateRepository(pool)
+
+	taskUsecase := task.NewService(
+		taskRepo,
+		taskRecurrenceRepo,
+		taskRecurrenceDatesRepo,
+	)
 	taskHandler := httphandlers.NewTaskHandler(taskUsecase)
 	docsHandler := swaggerdocs.NewHandler()
 	router := transporthttp.NewRouter(taskHandler, docsHandler)

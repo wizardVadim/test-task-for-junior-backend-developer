@@ -15,8 +15,8 @@ type taskRecurrenceDTO struct {
 	EveryNDays *int                      `json:"every_n_days"`
 	DayOfMonth *int                      `json:"day_of_month"`
 	IsActive   bool                      `json:"is_active"`
-	CreatedAt  time.Time                 `json:"created_at"`
-	UpdatedAt  time.Time                 `json:"updated_at"`
+	CreatedAt  time.Time                 `json:"created_at,omitempty"`
+	UpdatedAt  time.Time                 `json:"updated_at,omitempty"`
 	Dates      []taskRecurrenceDateDTO   `json:"dates,omitempty"`
 }
 

@@ -14,8 +14,8 @@ type taskOccurrenceDTO struct {
 	ScheduledDate time.Time         `json:"scheduled_date"`
 	Status        taskdomain.Status `json:"status"`
 	CompletedAt   *time.Time        `json:"completed_at"`
-	CreatedAt     time.Time         `json:"created_at"`
-	UpdatedAt     time.Time         `json:"updated_at"`
+	CreatedAt     time.Time         `json:"created_at,omitempty"`
+	UpdatedAt     time.Time         `json:"updated_at,omitempty"`
 }
 
 func newTaskOccurrenceDTO(taskOccurrence *taskoccurrencedomain.TaskOccurrence) taskOccurrenceDTO {

@@ -21,7 +21,6 @@ type TaskRepository interface {
 type TaskRecurrenceRepository interface {
 	Create(ctx context.Context, recurrence *taskrecurrencedomain.TaskRecurrence) (*taskrecurrencedomain.TaskRecurrence, error)
 	GetByTaskID(ctx context.Context, taskID int64) (*taskrecurrencedomain.TaskRecurrence, error)
-	Update(ctx context.Context, recurrence *taskrecurrencedomain.TaskRecurrence) (*taskrecurrencedomain.TaskRecurrence, error)
 	DeleteByTaskID(ctx context.Context, taskID int64) error
 }
 
