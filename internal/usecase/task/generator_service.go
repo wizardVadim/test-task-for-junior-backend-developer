@@ -10,11 +10,18 @@ import (
 	taskrecurrencedatedomain "example.com/taskservice/internal/domain/task_recurrence_date"
 )
 
+type GeneratorConfig struct {
+	RecentWindowMinutes int
+	RecentLookaheadDays int
+	DailyLookaheadDays  int
+}
+
 type GeneratorService struct {
 	taskRepo                TaskRepository
 	taskRecurrenceRepo      TaskRecurrenceRepository
 	taskRecurrenceDatesRepo TaskRecurrenceDateRepository
 	taskOccurrenceRepo      TaskOccurrenceRepository
+	config                  GeneratorConfig
 	now                     func() time.Time
 }
 
@@ -23,19 +30,21 @@ func NewGeneratorService(
 	taskRecurrenceRepo TaskRecurrenceRepository,
 	taskRecurrenceDatesRepo TaskRecurrenceDateRepository,
 	taskOccurrenceRepo TaskOccurrenceRepository,
+	config GeneratorConfig,
 ) *GeneratorService {
 	return &GeneratorService{
 		taskRepo:                taskRepo,
 		taskRecurrenceRepo:      taskRecurrenceRepo,
 		taskRecurrenceDatesRepo: taskRecurrenceDatesRepo,
 		taskOccurrenceRepo:      taskOccurrenceRepo,
+		config:                  config,
 		now:                     func() time.Time { return time.Now().UTC() },
 	}
 }
 
 func (s *GeneratorService) GenerateRecent(ctx context.Context) error {
 	now := s.now()
-	since := now.Add(-10 * time.Minute)
+	since := now.Add(-time.Duration(s.config.RecentWindowMinutes) * time.Minute)
 
 	recurrences, err := s.taskRecurrenceRepo.ListUpdatedSince(ctx, since)
 	if err != nil {
@@ -43,7 +52,7 @@ func (s *GeneratorService) GenerateRecent(ctx context.Context) error {
 	}
 
 	from := startOfDayUTC(now)
-	to := from.AddDate(0, 0, 2)
+	to := from.AddDate(0, 0, s.config.RecentLookaheadDays)
 
 	if err := s.generateRecurringForRange(ctx, recurrences, from, to); err != nil {
 		return err
@@ -70,7 +79,7 @@ func (s *GeneratorService) GenerateDaily(ctx context.Context) error {
 	}
 
 	from := startOfDayUTC(now)
-	to := from.AddDate(0, 0, 7)
+	to := from.AddDate(0, 0, s.config.DailyLookaheadDays)
 
 	if err := s.generateRecurringForRange(ctx, recurrences, from, to); err != nil {
 		return err
