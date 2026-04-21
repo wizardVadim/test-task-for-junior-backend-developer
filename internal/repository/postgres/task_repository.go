@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -121,6 +122,96 @@ func (r *TaskRepository) List(ctx context.Context) ([]taskdomain.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func (r *TaskRepository) ListWithoutRecurrence(
+	ctx context.Context,
+) ([]taskdomain.Task, error) {
+	const query = `
+		SELECT t.id, t.title, t.description, t.status, t.created_at, t.updated_at
+		FROM tasks t
+		LEFT JOIN task_recurrences tr ON tr.task_id = t.id
+		WHERE tr.id IS NULL
+		ORDER BY t.id
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []taskdomain.Task
+
+	for rows.Next() {
+		var task taskdomain.Task
+
+		err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Status,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *TaskRepository) ListWithoutRecurrenceUpdatedSince(
+	ctx context.Context,
+	since time.Time,
+) ([]taskdomain.Task, error) {
+	const query = `
+		SELECT t.id, t.title, t.description, t.status, t.created_at, t.updated_at
+		FROM tasks t
+		LEFT JOIN task_recurrences tr ON tr.task_id = t.id
+		WHERE tr.id IS NULL
+		  AND t.updated_at >= $1
+		ORDER BY t.updated_at, t.id
+	`
+
+	rows, err := r.pool.Query(ctx, query, since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []taskdomain.Task
+
+	for rows.Next() {
+		var task taskdomain.Task
+
+		err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Status,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 type taskScanner interface {

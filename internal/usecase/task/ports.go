@@ -16,12 +16,18 @@ type TaskRepository interface {
 	Update(ctx context.Context, task *taskdomain.Task) (*taskdomain.Task, error)
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context) ([]taskdomain.Task, error)
+
+	ListWithoutRecurrence(ctx context.Context) ([]taskdomain.Task, error)
+	ListWithoutRecurrenceUpdatedSince(ctx context.Context, since time.Time) ([]taskdomain.Task, error)
 }
 
 type TaskRecurrenceRepository interface {
 	Create(ctx context.Context, recurrence *taskrecurrencedomain.TaskRecurrence) (*taskrecurrencedomain.TaskRecurrence, error)
 	GetByTaskID(ctx context.Context, taskID int64) (*taskrecurrencedomain.TaskRecurrence, error)
 	DeleteByTaskID(ctx context.Context, taskID int64) error
+
+	ListActive(ctx context.Context) ([]taskrecurrencedomain.TaskRecurrence, error)
+	ListUpdatedSince(ctx context.Context, since time.Time) ([]taskrecurrencedomain.TaskRecurrence, error)
 }
 
 type TaskRecurrenceDateRepository interface {
@@ -33,6 +39,8 @@ type TaskRecurrenceDateRepository interface {
 type TaskOccurrenceRepository interface {
 	Create(ctx context.Context, occ *taskoccurrencedomain.TaskOccurrence) error
 	GetByDate(ctx context.Context, date time.Time) ([]taskoccurrencedomain.TaskOccurrence, error)
+	GetByTaskID(ctx context.Context, taskID int64) ([]taskoccurrencedomain.TaskOccurrence, error)
+	GetByID(ctx context.Context, id int64) (*taskoccurrencedomain.TaskOccurrence, error)
 	Update(ctx context.Context, occ *taskoccurrencedomain.TaskOccurrence) error
 }
 

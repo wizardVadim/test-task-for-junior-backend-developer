@@ -18,6 +18,10 @@ type taskOccurrenceDTO struct {
 	UpdatedAt     time.Time         `json:"updated_at,omitempty"`
 }
 
+type taskOccurrenceStatusMutationDTO struct {
+	Status taskdomain.Status `json:"status"`
+}
+
 func newTaskOccurrenceDTO(taskOccurrence *taskoccurrencedomain.TaskOccurrence) taskOccurrenceDTO {
 	return taskOccurrenceDTO{
 		ID:            taskOccurrence.ID,
