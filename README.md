@@ -22,7 +22,7 @@ docker compose down -v
 docker compose up --build
 ```
 
-Причина в том, что SQL-файл из `migrations/0001_create_tasks.up.sql` и `migrations/0002_create_task_recurrences.up.sql` монтируется в `docker-entrypoint-initdb.d` и применяется только при инициализации пустого data volume.
+Причина в том, что SQL-файлы из директории `migrations/` монтируются в `docker-entrypoint-initdb.d` и применяются только при инициализации пустого data volume.
 
 ## Swagger
 
@@ -46,7 +46,7 @@ http://localhost:8089/swagger/openapi.json
 /api/v1
 ```
 
-Основные маршруты:
+### Задачи
 
 - `POST /api/v1/tasks`
 - `GET /api/v1/tasks`
@@ -54,44 +54,42 @@ http://localhost:8089/swagger/openapi.json
 - `PUT /api/v1/tasks/{id}`
 - `DELETE /api/v1/tasks/{id}`
 
+### Экземпляры задач (occurrences)
+
+- `GET /api/v1/occurrences?date=YYYY-MM-DD`
+- `GET /api/v1/tasks/{id}/occurrences`
+- `PATCH /api/v1/occurrences/{id}`
+
+## Поддерживаемые типы периодичности
+
+- `daily`
+- `monthly`
+- `specific_dates`
+- `even_days`
+- `odd_days`
+
+## Генерация экземпляров задач
+
+- генерация каждые 5 минут для новых/изменённых задач
+- ежедневная генерация (01:00 UTC)
+- защита от дублей через `(task_id, scheduled_date)`
 
 ## Versions
 
 ### 0.0.1
 
-Начальная версия сервиса трекера задач.
+Базовый CRUD для задач.
 
-Реализован базовый CRUD-функционал для работы с задачами:
+### 0.0.2
 
-- создание задачи (`POST /tasks`)
-- получение списка задач (`GET /tasks`)
-- получение задачи по ID (`GET /tasks/{id}`)
-- обновление задачи (`PUT /tasks/{id}`)
-- удаление задачи (`DELETE /tasks/{id}`)
+Добавлено:
 
-### Модель задачи
-
-Задача содержит следующие поля:
-
-- `id` — уникальный идентификатор
-- `title` — название задачи
-- `description` — описание задачи
-- `status` — текущий статус задачи (`new`, `in_progress`, `done`)
-- `created_at` — дата создания
-- `updated_at` — дата последнего обновления
-
-### Архитектура
-
-Проект реализован с разделением на слои:
-
-- `domain` — доменные модели
-- `usecase` — бизнес-логика
-- `repository` — работа с базой данных (PostgreSQL)
-- `transport/http` — HTTP API (handlers, router, DTO)
-- `infrastructure` — подключение к базе
-
-### Инфраструктура
-
-- PostgreSQL в качестве базы данных
-- Docker Compose для запуска окружения
-- Swagger/OpenAPI для документации API
+- периодичность задач
+- типы: daily, monthly, specific_dates, even_days, odd_days
+- таблицы: task_recurrences, task_recurrence_dates
+- генерация экземпляров задач (cron через goroutines)
+- сущность task_occurrence
+- API для occurrences
+- обновление статусов экземпляров
+- синхронизация статуса задачи
+- улучшенный Swagger

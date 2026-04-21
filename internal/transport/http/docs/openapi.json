@@ -14,6 +14,10 @@
     {
       "name": "Tasks",
       "description": "Operations with tasks"
+    },
+    {
+      "name": "Occurrences",
+      "description": "Operations with task occurrences"
     }
   ],
   "paths": {
@@ -301,6 +305,123 @@
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
+    },
+    "/api/v1/occurrences": {
+      "get": {
+        "tags": ["Occurrences"],
+        "summary": "List task occurrences by date",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "description": "Date in YYYY-MM-DD format",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-04-22"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occurrence list for the selected date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TaskOccurrence" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v1/occurrences/{id}": {
+      "patch": {
+        "tags": ["Occurrences"],
+        "summary": "Update occurrence status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTaskOccurrenceStatusRequest" },
+              "examples": {
+                "in_progress": {
+                  "summary": "Set occurrence in progress",
+                  "value": {
+                    "status": "in_progress"
+                  }
+                },
+                "done": {
+                  "summary": "Set occurrence done",
+                  "value": {
+                    "status": "done"
+                  }
+                },
+                "new": {
+                  "summary": "Reset occurrence to new",
+                  "value": {
+                    "status": "new"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Occurrence updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}/occurrences": {
+      "get": {
+        "tags": ["Occurrences"],
+        "summary": "List occurrences by task ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occurrence list for the selected task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TaskOccurrence" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
     }
   },
   "components": {
@@ -569,6 +690,54 @@
             "type": "string",
             "format": "date-time",
             "example": "2026-04-22T00:00:00Z"
+          }
+        }
+      },
+      "TaskOccurrence": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "task_id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 10
+          },
+          "recurrence_id": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "example": 5
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-04-22"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "new"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-04-22T14:30:00Z"
+          }
+        }
+      },
+      "UpdateTaskOccurrenceStatusRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["new", "in_progress", "done"],
+            "example": "done"
           }
         }
       },
